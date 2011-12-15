@@ -1,4 +1,4 @@
-# combine-letters
+# Combine Letters
 
 This function came about after a friend of mine told me that he had recently had an interview during which he was asked to write a function that takes as its argument an array of characters (in Javascript, strings of length 1) and returns an array of all the strings that can be formed from combinations of those characters, with no duplicates.
 
