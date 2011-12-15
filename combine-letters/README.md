@@ -4,7 +4,7 @@ This function came about after a friend of mine told me that he had recently had
 
 He wasn't able to do it, but he got the job anyway, and now he's very happy there, and the guy who asked him the question in the interview has been suitably impressed with his skills.
 
-I went home and wrote this out, but it took me a lot longer than I would have gotten in an interview!
+I went home and wrote this out, but it took me a lot longer than the amount of time I would have been given in an interview!
 
 I couldn't figure out whether he meant for all strings of all lengths to be returned, or just strings of the same length as the array. In other words, when given
 
@@ -20,7 +20,7 @@ or
     
 ?
 
-I decided to write both. The files in this folder labeled "1" are the former option, and the files labeled "2" contain the latter. The one that only returns full-length strings is a little more elegant-looking. Version 2 is actually an elaboration of version 1 -- it takes an optional argument which tells it whether to return words of all sizes, so that it has exactly the same effect as version 1 if you don't pass that optional argument.
+I decided to write both. The files in this folder labeled "1" are the former option, and the files labeled "2" contain the latter. Version 1 is a little more elegant-looking. Version 2 is actually an elaboration of version 1 -- it takes an optional argument which if true tells it to return words of all sizes. This argument defaults to false, so version 2 has exactly the same effect as version 1 if you don't pass that optional argument.
 
 
 ## Description

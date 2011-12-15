@@ -35,14 +35,14 @@ var combineLetters = function( letterArray ) {
 // -----------------------------------
 // and here are some helper functions to demonstrate.
 
-var rearrange = function( word, allSizeWords ) {
-    return combineLetters( word.split(""), allSizeWords );
+var rearrange = function( word ) {
+    return combineLetters( word.split("") );
 };
 
 var getAndPrint = function() {
     var str = prompt( "Type in a word:" );
     if (str) {
-        alert( rearrange( str, true ).join( "\n") ); // change true to false here to get only full-length words
+        alert( rearrange( str ).join( "\n") ); // change true to false here to get only full-length words
         return true;
     }
     return false;
