@@ -3,9 +3,9 @@
 // Give them new names, so that the standard versions
 // will still be there and we can compare them to our new ones.
 
-var transfer = function( arrayFrom, arrayTo, index ) {
+var transfer = function( arrayFrom, arrayTo, howManyNotToTransfer ) {
     var i = arrayFrom.length;
-    while (i > index) {
+    while (i > howManyNotToTransfer) {
         i--;
         arrayTo.push( arrayFrom.pop() );
     }
