@@ -8,21 +8,18 @@ var LIFE = LIFE || (function() {
   // ------ THE CONFIG INFO -------------
   
   var config = {
-    PLAN_WIDTH: 20,
-    PLAN_HEIGHT: 15,
-    REFRESH_WIDTH: 100,
-    REFRESH_HEIGHT: 100,
+    PLAN_WIDTH: 50,
+    PLAN_HEIGHT: 30,
+    CELL_SIZE: 10,
     
     // PREFAB_PLAN is not currently used (we're just setting up
     // a random plan instead). This is just an example. To put it into
     // use, pass it to the grid.init method below.
 
     PREFAB_PLAN: [
-      "*  ***",
-      "*  * *",
-      "***  *",
-      "**   *",
-      "*  **"
+      " * ",
+      "  *",
+      "***"
     ]
   };
   
@@ -68,10 +65,23 @@ var LIFE = LIFE || (function() {
     return number;
   };
 
+  Cell.prototype.activateNeighbors = function( grid ) {
+    // Even though they're not alive yet, all the cell's neighbors that don't
+    // already exist need to be created, so that they will be checked in 
+    // the subsequent round to see if they should come alive.
+    
+    this.iterateThroughNeighbors( function( newX, newY ) {
+      if (!grid.cellAt( newX, newY )) {
+        grid.add( new Cell( newX, newY ));
+      }
+    });
+  };
+
   Cell.prototype.setFate = function( grid ) {
     var num = this.numberOfNeighbors( grid );
     this.willLive = this.alive ? (num === 2 || num === 3) : (num === 3);
   };
+
 
   var Grid = function( plan ) {
     this.init( plan );
@@ -100,24 +110,6 @@ var LIFE = LIFE || (function() {
     this[x][y] = cell;
   };
 
-  Grid.prototype.activate = function( x, y ) {
-    var grid = this;
-    var cell = new Cell( x, y );
-
-    this.add( cell );
-    cell.comeToLife();
-    
-    // Even though they're not alive yet, all the cell's neighbors that don't
-    // already exist need to be created, so that they will be checked in 
-    // the subsequent round to see if they should come alive.
-     
-    cell.iterateThroughNeighbors( function( newX, newY ) {
-      if (!grid.cellAt( newX, newY )) {
-        grid.add( new Cell( newX, newY ));
-      }
-    });
-  };
-
   Grid.prototype.step = function() {
     var grid = this;
     var column;
@@ -131,6 +123,7 @@ var LIFE = LIFE || (function() {
     this.iterate( function( cell ) {
       if (cell.willLive) {
         cell.comeToLife();
+        cell.activateNeighbors( grid );
       } else {
         cell.die();
       }
@@ -151,6 +144,7 @@ var LIFE = LIFE || (function() {
   
   Grid.prototype.init = function( planArray ) {
     var x, y;
+    var cell;
     var width = planArray ? planArray[0].length : config.PLAN_WIDTH;
     var height = planArray ? planArray.length : config.PLAN_HEIGHT;
     
@@ -161,36 +155,60 @@ var LIFE = LIFE || (function() {
         // Otherwise pick a random number.
         
         if ( (planArray && (planArray[y][x] === '*')) || ((!planArray) && (0.6 < Math.random())) ) {
-          this.activate( x, y );
+          cell = new Cell( x, y);
+          cell.comeToLife();
+          this.add( cell );
+          cell.activateNeighbors( this );
         }
       }
     }
   };
   
   ////// --- THE DISPLAY ---------------------------
-
-  var refresh = function( grid, element, width, height ) {
-    var lines = [];
-    var characters;
-    var w, h;
-    var cell;
+  
+  var canvas = {
     
-    for (h = 0; h < height; h++) {
-      characters = [];
-      for (w = 0; w < width; w++) {
-        cell = grid.cellAt( w, h );
-        if (cell && cell.alive) {
-          characters.push( "*" );
-        } else {
-          characters.push( " " );
+    init: function( element ) {
+      var c = element.getContext( "2d" );
+      var width = element.width;
+      var height = element.height;
+      
+      c.fillStyle = '#FFF';
+      c.fillRect( 0, 0, width, height );
+            
+      this.cellsWide = Math.floor( width / config.CELL_SIZE );
+      this.cellsHigh = Math.floor( height / config.CELL_SIZE );
+      
+      this.c = c;
+    },
+    
+    fillCell: function( x, y, color ) {
+      var cellSize = config.CELL_SIZE;
+      var startX, startY;
+      var c = this.c;
+      
+      if (x >= 0 && y >= 0 && x < this.cellsWide && y < this.cellsHigh) {
+        startX = x * cellSize;
+        startY = y * cellSize;
+
+        c.fillStyle = color;
+        c.fillRect( startX, startY, cellSize, cellSize );
+      }
+    },
+    
+    refresh: function( grid ) {
+      var x, y;
+      var cell;
+      
+      for (x = 0; x < this.cellsWide; x++) {
+        for (y = 0; y < this.cellsHigh; y++) {
+          cell = grid.cellAt( x, y );
+          this.fillCell( x, y, (cell && cell.alive) ? '#000' : '#FFF' );
         }
       }
-      characters.push("\n");
-      lines.push( characters.join( "" ));
     }
-    document.getElementById( element ).innerHTML = lines.join( "" );
-  }
-
+  };
+  
   var userSpeed = {
     get: function() {
       return parseFloat( document.getElementById( 'speed' ).value );
@@ -203,11 +221,11 @@ var LIFE = LIFE || (function() {
   var interval;
   
   var runLife = function ( grid, speed ) {
-    refresh( grid, 'field', config.REFRESH_WIDTH, config.REFRESH_HEIGHT );
+    canvas.refresh( grid );
 
     interval = setInterval( function() {
       grid.step();
-      refresh( grid, 'field', config.REFRESH_WIDTH, config.REFRESH_HEIGHT );
+      canvas.refresh( grid );
     }, Math.floor( 1000 / speed ) );
   };
 
@@ -242,6 +260,8 @@ var LIFE = LIFE || (function() {
   // here to start with specific initial conditions.
    
   var grid = new Grid(); 
+  canvas.init( document.getElementById( 'canvasGrid' ));
+  
   setEventHandlers( grid );
   runLife( grid, userSpeed.get() );
   
@@ -250,6 +270,7 @@ var LIFE = LIFE || (function() {
   
   return { 
     grid: grid,
+    canvas: canvas,
     config: config,
     interval: interval
   };
