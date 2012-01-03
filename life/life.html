@@ -1,0 +1,217 @@
+<html><head></head><body>
+
+  <html><head></head><body>
+
+  <form>
+  	Speed (generations per second):&nbsp;
+  	<input id="speed" type="text" value="1"></input>
+  	<input id="speedbutton" type="button" value="submit"></input>
+  </form>
+  <p>&nbsp;</p>
+  <pre id="field"></pre>
+
+<script>
+
+//////////////////// model
+
+var plan = [
+ 
+  "*",
+  "*",
+  "*"
+
+];
+
+/////////////// the meat
+
+var cells = {};
+
+var numberOfNeighbors = function( x, y ) {
+  console.log("x, y at the beginning of numberOfNeighbors: " + x + ", " + y);
+  var number = 0;
+  for (var xOffset = -1; xOffset <= 1; xOffset++) {
+    for (var yOffset = -1; yOffset <= 1; yOffset++) {
+      var tempX = +x + xOffset;
+      var tempY = +y + yOffset;
+      if (cells[tempX] && cells[tempX][tempY]) {
+        if (cells[tempX][tempY].value && (xOffset !== 0 || yOffset !== 0)) {
+          number++;
+        }
+      }
+    }
+  }
+  console.log("numberOfNeighbors (just before the function returns): " + number)
+  return number;
+};
+
+var turnOnCell = function( x, y ) {
+  console.log( "Beginning of turnOnCell" );
+  cells[x] = cells[x] || {};
+  cells[x][y] = cells[x][y] || {};
+  cells[x][y].value = true;
+  console.log("x: " + x + ", y: " + y + ", cells[x][y].value: " + cells[x][y].value);
+  for (var xOffset = -1; xOffset <= 1; xOffset++) {
+    for (var yOffset = -1; yOffset <= 1; yOffset++) {
+      var tempX = +x + xOffset;
+      var tempY = +y + yOffset;
+      cells[tempX] = cells[tempX] || {};
+      cells[tempX][tempY] = cells[tempX][tempY] || {};
+      cells[tempX][tempY].value = cells[tempX][tempY].value || false;
+    }
+  }
+};
+
+var turnOffCell = function( x, y ) {
+  cells[x][y].value = false;
+};
+
+var fate = function( x, y ) {
+  var num = numberOfNeighbors( x, y);
+  return cells[x][y].value ? (num === 2 || num === 3) : (num === 3); 
+};
+
+var refresh = function( element, width, height ) {
+  var width = width || 30;
+  var height = height || 30;
+  var lines = [];
+  var characters;
+  for (var h = 0; h < height; h++) {
+    characters = [];
+    for (var w = 0; w < width; w++) {
+      if (cells[w] && cells[w][h] && cells[w][h].value) {
+        characters.push( "*" );
+      } else {
+        characters.push( " " );
+      }
+    }
+    characters.push("\n");
+    lines.push( characters.join( "" ));
+  }
+  document.getElementById( element ).innerHTML = lines.join( "" );
+}
+  
+cells.setFates = function() { 
+  console.log("At the beginning of setFates:");
+  console.dir(cells);
+  for (var x in this) {
+    for (var y in this[x]) {
+      this[x][y].fate = fate( x, y );
+    }
+  }
+  console.log("At the end of setFates:");
+  console.dir(cells);
+}
+
+cells.clearDeadwood = function() {
+  console.log("Beginning of clearDeadwood: ");
+  console.dir(cells);
+  for (var x in this) {
+    for (var y in this[x]) {
+      if (numberOfNeighbors( x, y ) === 0) {
+        delete this[x][y];
+      }
+    }
+  }
+  console.log("End of clearDeadwood: ");
+  console.dir(cells);
+}
+
+cells.step = function() {
+  this.setFates();
+  for (var x in this) {
+    for (var y in this[x]) {
+      if (this[x][y].fate === true) {
+        turnOnCell( x, y );
+      } else {
+        turnOffCell( x, y );
+      }
+    }
+  }
+  this.clearDeadwood();
+};
+
+var importPlan = (function( planArray ) {
+  var width = planArray ? planArray[0].length : 20;
+  var height = planArray ? planArray.length : 15;
+  
+  for (var y = 0; y < height; y++) {
+    for (var x = 0; x < width; x++) {
+      if (planArray) {
+        if (planArray[y][x] === "*") {
+          turnOnCell( x, y );
+        }
+      } else if (0.6 < Math.random()) {
+        turnOnCell( x, y );
+      }
+    }
+  }
+})();
+
+
+////// --- the implementation
+
+var userSpeed = {
+	value: document.getElementById( "speed" ).value,
+	set: function() {
+		var newValue = parseFloat( document.getElementById( "speed" ).value );
+		this.value = newValue || this.value;
+		document.getElementById( "speed" ).value = this.value;
+	}
+};
+
+document.getElementById( "speedbutton" ).onclick = function() {
+	userSpeed.set.call( userSpeed );
+};
+
+document.getElementById( 'speed' ).onkeydown = function( event ) {
+
+    // cross-browser compliance for different keydown event key code property names    
+    var code = event.keyCode || event.which;
+    if (code === 13) {
+        event.preventDefault();
+        userSpeed.set.call( userSpeed );
+    }
+};
+
+/*
+for (var counter = 0; counter < 3; counter++) {
+  refresh( "field", 30, 30 );
+  cells.step();
+  
+}
+*/
+
+
+(function runLife( speed ) {
+	var interval = setInterval( function() {
+		
+		if (speed !== userSpeed.value) {
+			clearInterval( interval );
+			runLife( userSpeed.value );
+		}
+	  refresh( "field", 100, 100 );
+	  cells.step();
+		
+	}, Math.floor( 1000 / userSpeed.value ) );
+})( userSpeed.value );
+
+
+
+/////////////////////////////// tests
+
+var assert = function( test, message ) {
+  console.log( (test ? "PASSED: " : "FAILED: ") + message );
+};
+
+var deadOrUnborn = function( value ) {
+  if (typeof value === "undefined" || value === false) return false;
+}
+
+assert( numberOfNeighbors(1,1) === 6, "1,1 should have 6 neighbors." );
+assert( fate(4,1) === true, "4,1 will remain alive");
+assert( fate(3,2) === true, "3,2 will come alive");
+assert( !fate(1,2), "1,2 will die");
+assert( !fate(1,0), "1,0 will remain dead");
+assert( numberOfNeighbors("1","1") === 6, "Should also take strings.")
+
+</script></body></html>
