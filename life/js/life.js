@@ -8,8 +8,8 @@ var LIFE = LIFE || (function() {
   // ------ THE CONFIG INFO -------------
   
   var config = {
-    PLAN_WIDTH: 50,
-    PLAN_HEIGHT: 30,
+    PLAN_WIDTH: 30,
+    PLAN_HEIGHT: 10,
     CELL_SIZE: 10,
     
     // PREFAB_PLAN is not currently used (we're just setting up
@@ -23,9 +23,17 @@ var LIFE = LIFE || (function() {
     ]
   };
   
+  // The other variables
+  
+  var isEmpty,
+      Grid, Cell,
+      grid, canvas, userSpeed,
+      canvasElement, width, height, interval,
+      setEventHandlers, runLife;
+  
   // ------- UTILITY FUNCTION (actually, there's only one) -----
   
-  var isEmpty = function( obj ) {
+  isEmpty = function( obj ) {
     for (var p in obj) {
       if (obj.hasOwnProperty( p )) {
         return false;
@@ -36,7 +44,7 @@ var LIFE = LIFE || (function() {
   
   // ------- THE CELL AND GRID OBJECT LOGIC ------------
 
-  var Cell = function( x, y ) {
+  Cell = function( x, y ) {
     this.x = x;
     this.y = y;
   };
@@ -94,8 +102,8 @@ var LIFE = LIFE || (function() {
   };
 
 
-  var Grid = function( plan ) {
-    this.init( plan );
+  Grid = function( plan, width, height ) {
+    this.init( plan, width, height );
   };
 
   Grid.prototype.iterate = function( action ) {
@@ -156,20 +164,25 @@ var LIFE = LIFE || (function() {
     }
   };
   
-  Grid.prototype.init = function( planArray ) {
+  Grid.prototype.init = function( planArray, fieldWidth, fieldHeight ) {
     var x, y;
     var cell;
-    var width = planArray ? planArray[0].length : config.PLAN_WIDTH;
-    var height = planArray ? planArray.length : config.PLAN_HEIGHT;
+    var left, top;
+    var planWidth = planArray ? planArray[0].length : config.PLAN_WIDTH;
+    var planHeight = planArray ? planArray.length : config.PLAN_HEIGHT;
+
+    // Center it in the field.
+    left = Math.floor( fieldWidth/2 - planWidth/2);
+    top = Math.floor( fieldHeight/2 - planHeight/2);
     
-    for (var y = 0; y < height; y++) {
-      for (var x = 0; x < width; x++) {
+    for (var y = 0; y < planHeight; y++) {
+      for (var x = 0; x < planWidth; x++) {
         
         // If we've been passed a planArray, check whether the element is starred,
         // Otherwise pick a random number.
         
         if ( (planArray && (planArray[y][x] === '*')) || ((!planArray) && (0.6 < Math.random())) ) {
-          cell = new Cell( x, y);
+          cell = new Cell( left + x, top + y);
           cell.comeToLife();
           this.add( cell );
           cell.activateNeighbors( this );
@@ -180,33 +193,28 @@ var LIFE = LIFE || (function() {
   
   ////// --- THE DISPLAY ---------------------------
   
-  var canvas = {
+  canvas = {
     
-    init: function( element ) {
-      var c = element.getContext( "2d" );
-      var width = element.width;
-      var height = element.height;
+    init: function( element, cellsWide, cellsHigh ) {
+      this.c = element.getContext( "2d" );
       
-      c.fillStyle = '#FFF';
-      c.fillRect( 0, 0, width, height );
+      this.c.fillStyle = '#999';
+      this.c.fillRect( 0, 0, element.width, element.height );
             
-      this.cellsWide = Math.floor( width / config.CELL_SIZE );
-      this.cellsHigh = Math.floor( height / config.CELL_SIZE );
-      
-      this.c = c;
+      this.cellsWide = cellsWide;
+      this.cellsHigh = cellsHigh;
     },
     
     fillCell: function( x, y, color ) {
       var cellSize = config.CELL_SIZE;
       var startX, startY;
-      var c = this.c;
       
       if (x >= 0 && y >= 0 && x < this.cellsWide && y < this.cellsHigh) {
         startX = x * cellSize;
         startY = y * cellSize;
 
-        c.fillStyle = color;
-        c.fillRect( startX, startY, cellSize, cellSize );
+        this.c.fillStyle = color;
+        this.c.fillRect( startX + 1, startY + 1, cellSize - 1, cellSize - 1 );
       }
     },
     
@@ -216,6 +224,11 @@ var LIFE = LIFE || (function() {
       
       for (x = 0; x < this.cellsWide; x++) {
         for (y = 0; y < this.cellsHigh; y++) {
+          
+          // Check for existence of grid because
+          // we're also using this method to fill canvas with white squares
+          // before we create the grid.
+          
           cell = grid.cellAt( x, y );
           this.fillCell( x, y, (cell && cell.alive) ? '#000' : '#FFF' );
         }
@@ -223,7 +236,7 @@ var LIFE = LIFE || (function() {
     }
   };
   
-  var userSpeed = {
+  userSpeed = {
     get: function() {
       return parseFloat( document.getElementById( 'speed' ).value );
     },
@@ -232,9 +245,7 @@ var LIFE = LIFE || (function() {
     }
   };
   
-  var interval;
-  
-  var runLife = function ( grid, speed ) {
+  runLife = function ( grid, speed ) {
     canvas.refresh( grid );
 
     interval = setInterval( function() {
@@ -243,7 +254,7 @@ var LIFE = LIFE || (function() {
     }, Math.floor( 1000 / speed ) );
   };
 
-  var setEventHandlers = function( grid ) {
+  setEventHandlers = function( grid ) {
     
     var changeSpeed = function() {
       var speed;
@@ -272,11 +283,15 @@ var LIFE = LIFE || (function() {
 
   // ------- MAKE IT SO ----------------
 
+  canvasElement = document.getElementById( 'canvasGrid' );
+  width = (canvasElement.width - 1) / config.CELL_SIZE;
+  height = (canvasElement.height - 1) / config.CELL_SIZE;
+  
   // Pass an array of strings with spaces and asterisks
-  // here to start with specific initial conditions.
-   
-  var grid = new Grid( config.PREFAB_PLAN ); 
-  canvas.init( document.getElementById( 'canvasGrid' ));
+  // here where it says "null" to start with specific initial conditions.
+    
+  grid = new Grid( null, width, height ); 
+  canvas.init( canvasElement, width, height);
   
   setEventHandlers( grid );
   runLife( grid, userSpeed.get() );
