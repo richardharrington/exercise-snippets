@@ -1,18 +1,9 @@
-<html><head></head><body>
+// The "grid" in this program is not exactly a 2D array,
+// it's more of a 2D hash table. Only cells that are alive,
+// and their immediate neighbors, are represented in the grid.
 
-  <html><head></head><body>
-
-  <form>
-  	Speed (generations per second):&nbsp;
-  	<input id="speed" type="text" value=".25"></input>
-  	<input id="speedbutton" type="button" value="submit"></input>
-  </form>
-  <p>&nbsp;</p>
-  <pre id="field"></pre>
-
-<script>
-
-var LIFE = (function() {
+;
+var LIFE = LIFE || (function() {
   
   // ------ THE CONFIG INFO -------------
   
@@ -145,7 +136,10 @@ var LIFE = (function() {
       }
     });
 
-    // Clear deadwood for memory management
+    // Clear deadwood for memory management and program efficiency.
+    // NOTE: THIS SECTION LEAVES EMPTY COLUMNS IN PLACE. I TRIED TO GET
+    // RID OF THOSE TOO BUT IT WASN'T WORKING. I'LL GET TO THAT WHEN I GET A CHANCE.
+    
     this.iterate( function( cell ) {
       var x = cell.x, y = cell.y;
       
@@ -198,12 +192,12 @@ var LIFE = (function() {
   }
 
   var userSpeed = {
-  	get: function() {
-  	  return parseFloat( document.getElementById( 'speed' ).value );
-	  },
-  	set: function( val ) {
-  		document.getElementById( 'speed' ).value = val;
-  	}
+    get: function() {
+      return parseFloat( document.getElementById( 'speed' ).value );
+    },
+    set: function( val ) {
+      document.getElementById( 'speed' ).value = val;
+    }
   };
   
   var interval;
@@ -211,10 +205,10 @@ var LIFE = (function() {
   var runLife = function ( grid, speed ) {
     refresh( grid, 'field', config.REFRESH_WIDTH, config.REFRESH_HEIGHT );
 
-  	interval = setInterval( function() {
-  	  grid.step();
-  	  refresh( grid, 'field', config.REFRESH_WIDTH, config.REFRESH_HEIGHT );
-  	}, Math.floor( 1000 / speed ) );
+    interval = setInterval( function() {
+      grid.step();
+      refresh( grid, 'field', config.REFRESH_WIDTH, config.REFRESH_HEIGHT );
+    }, Math.floor( 1000 / speed ) );
   };
 
   var setEventHandlers = function( grid ) {
@@ -232,12 +226,12 @@ var LIFE = (function() {
 
     document.getElementById( 'speed' ).onkeydown = function( event ) {
 
-        // cross-browser compliance for different keydown event key code property names    
-        var code = event.keyCode || event.which;
-        if (code === 13) {
-            event.preventDefault();
-            changeSpeed();
-        }
+      // cross-browser compliance for different keydown event key code property names    
+      var code = event.keyCode || event.which;
+      if (code === 13) {
+        event.preventDefault();
+        changeSpeed();
+      }
     };
   };
 
@@ -251,14 +245,15 @@ var LIFE = (function() {
   setEventHandlers( grid );
   runLife( grid, userSpeed.get() );
   
+  
   // ---- module interface for debugging -----
   
-  return { grid: grid,
-           config: config,
-           interval: interval
-         };
+  return { 
+    grid: grid,
+    config: config,
+    interval: interval
+  };
     
 })();
 
 
-</script></body></html>
