@@ -27,9 +27,8 @@ var LIFE = LIFE || (function() {
   
   var isEmpty,
       Grid, Cell,
-      grid, canvas, userSpeed,
-      canvasElement, width, height, interval,
-      setEventHandlers, runLife;
+      grid, canvas, userSpeed, interval,
+      setEventHandlers, runLife, init;
   
   // ------- UTILITY FUNCTION (actually, there's only one) -----
   
@@ -47,6 +46,11 @@ var LIFE = LIFE || (function() {
   Cell = function( x, y ) {
     this.x = x;
     this.y = y;
+    this.alive = false;
+  };
+  
+  Cell.prototype.alive = function() {
+    return this.alive;
   };
   
   Cell.prototype.comeToLife = function() {
@@ -258,7 +262,6 @@ var LIFE = LIFE || (function() {
     
     var changeSpeed = function() {
       var speed;
-      
       clearInterval( interval );
       speed = userSpeed.get();
       userSpeed.set( speed );
@@ -279,23 +282,27 @@ var LIFE = LIFE || (function() {
       }
     };
   };
+  
+  init = function() {
+    var canvasElement = document.getElementById( 'canvasGrid' );
+    var width = (canvasElement.width - 1) / config.CELL_SIZE;
+    var height = (canvasElement.height - 1) / config.CELL_SIZE;
+
+    // Pass an array of strings with spaces and asterisks
+    // here where it says "null" to start with specific initial conditions.
+
+    grid = new Grid( null, width, height ); 
+    canvas.init( canvasElement, width, height);
+
+    setEventHandlers( grid );
+    runLife( grid, userSpeed.get() );
+    
+  };
 
 
   // ------- MAKE IT SO ----------------
 
-  canvasElement = document.getElementById( 'canvasGrid' );
-  width = (canvasElement.width - 1) / config.CELL_SIZE;
-  height = (canvasElement.height - 1) / config.CELL_SIZE;
-  
-  // Pass an array of strings with spaces and asterisks
-  // here where it says "null" to start with specific initial conditions.
-    
-  grid = new Grid( null, width, height ); 
-  canvas.init( canvasElement, width, height);
-  
-  setEventHandlers( grid );
-  runLife( grid, userSpeed.get() );
-  
+  init();
   
   // ---- module interface for debugging -----
   
