@@ -23,6 +23,17 @@ var LIFE = LIFE || (function() {
     ]
   };
   
+  // ------- UTILITY FUNCTION (actually, there's only one) -----
+  
+  var isEmpty = function( obj ) {
+    for (var p in obj) {
+      if (obj.hasOwnProperty( p )) {
+        return false;
+      }
+    }
+    return true;
+  };
+  
   // ------- THE CELL AND GRID OBJECT LOGIC ------------
 
   var Cell = function( x, y ) {
@@ -35,7 +46,7 @@ var LIFE = LIFE || (function() {
   };
 
   Cell.prototype.die = function() {
-    delete this.alive;
+    this.alive = false;
   }
 
   Cell.prototype.iterateThroughNeighbors = function( action ) {
@@ -105,6 +116,7 @@ var LIFE = LIFE || (function() {
   };
 
   Grid.prototype.add = function( cell ) {
+    var column;
     var x = cell.x, y = cell.y;
     this[x] = this[x] || {};
     this[x][y] = cell;
@@ -130,16 +142,18 @@ var LIFE = LIFE || (function() {
     });
 
     // Clear deadwood for memory management and program efficiency.
-    // NOTE: THIS SECTION LEAVES EMPTY COLUMNS IN PLACE. I TRIED TO GET
-    // RID OF THOSE TOO BUT IT WASN'T WORKING. I'LL GET TO THAT WHEN I GET A CHANCE.
-    
     this.iterate( function( cell ) {
       var x = cell.x, y = cell.y;
-      
       if (!cell.alive && cell.numberOfNeighbors( grid ) === 0) {
         delete grid[x][y];
       }
     });
+    
+    for (column in grid) {
+      if (isEmpty( grid[column] )) {
+        delete grid[column];
+      }
+    }
   };
   
   Grid.prototype.init = function( planArray ) {
@@ -232,8 +246,10 @@ var LIFE = LIFE || (function() {
   var setEventHandlers = function( grid ) {
     
     var changeSpeed = function() {
-      var speed = userSpeed.get();
+      var speed;
+      
       clearInterval( interval );
+      speed = userSpeed.get();
       userSpeed.set( speed );
       runLife( grid, speed );
     }
@@ -259,7 +275,7 @@ var LIFE = LIFE || (function() {
   // Pass an array of strings with spaces and asterisks
   // here to start with specific initial conditions.
    
-  var grid = new Grid(); 
+  var grid = new Grid( config.PREFAB_PLAN ); 
   canvas.init( document.getElementById( 'canvasGrid' ));
   
   setEventHandlers( grid );
