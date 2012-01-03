@@ -4,7 +4,7 @@
 
   <form>
   	Speed (generations per second):&nbsp;
-  	<input id="speed" type="text" value="1"></input>
+  	<input id="speed" type="text" value=".25"></input>
   	<input id="speedbutton" type="button" value="submit"></input>
   </form>
   <p>&nbsp;</p>
@@ -12,206 +12,253 @@
 
 <script>
 
-//////////////////// model
+var LIFE = (function() {
+  
+  // ------ THE CONFIG INFO -------------
+  
+  var config = {
+    PLAN_WIDTH: 20,
+    PLAN_HEIGHT: 15,
+    REFRESH_WIDTH: 100,
+    REFRESH_HEIGHT: 100,
+    
+    // PREFAB_PLAN is not currently used (we're just setting up
+    // a random plan instead). This is just an example. To put it into
+    // use, pass it to the grid.init method below.
 
-var plan = [
- 
-  "*",
-  "*",
-  "*"
+    PREFAB_PLAN: [
+      "*  ***",
+      "*  * *",
+      "***  *",
+      "**   *",
+      "*  **"
+    ]
+  };
+  
+  // ------- THE CELL AND GRID OBJECT LOGIC ------------
 
-];
+  var Cell = function( x, y ) {
+    this.x = x;
+    this.y = y;
+  };
+  
+  Cell.prototype.comeToLife = function() {
+    this.alive = true;
+  };
 
-/////////////// the meat
+  Cell.prototype.die = function() {
+    delete this.alive;
+  }
 
-var cells = {};
+  Cell.prototype.iterateThroughNeighbors = function( action ) {
+    var xOffset, yOffset,
+        x = +this.x, 
+        y = +this.y;
 
-var numberOfNeighbors = function( x, y ) {
-  console.log("x, y at the beginning of numberOfNeighbors: " + x + ", " + y);
-  var number = 0;
-  for (var xOffset = -1; xOffset <= 1; xOffset++) {
-    for (var yOffset = -1; yOffset <= 1; yOffset++) {
-      var tempX = +x + xOffset;
-      var tempY = +y + yOffset;
-      if (cells[tempX] && cells[tempX][tempY]) {
-        if (cells[tempX][tempY].value && (xOffset !== 0 || yOffset !== 0)) {
-          number++;
+    for (xOffset = -1; xOffset <= 1; xOffset++) {
+      for (yOffset = -1; yOffset <= 1; yOffset++) {
+        
+        // Don't count the "this" cell.
+        if (xOffset !== 0 || yOffset !== 0) {
+          action( x + xOffset, y + yOffset );          
         }
       }
     }
-  }
-  console.log("numberOfNeighbors (just before the function returns): " + number)
-  return number;
-};
+  };
 
-var turnOnCell = function( x, y ) {
-  console.log( "Beginning of turnOnCell" );
-  cells[x] = cells[x] || {};
-  cells[x][y] = cells[x][y] || {};
-  cells[x][y].value = true;
-  console.log("x: " + x + ", y: " + y + ", cells[x][y].value: " + cells[x][y].value);
-  for (var xOffset = -1; xOffset <= 1; xOffset++) {
-    for (var yOffset = -1; yOffset <= 1; yOffset++) {
-      var tempX = +x + xOffset;
-      var tempY = +y + yOffset;
-      cells[tempX] = cells[tempX] || {};
-      cells[tempX][tempY] = cells[tempX][tempY] || {};
-      cells[tempX][tempY].value = cells[tempX][tempY].value || false;
-    }
-  }
-};
-
-var turnOffCell = function( x, y ) {
-  cells[x][y].value = false;
-};
-
-var fate = function( x, y ) {
-  var num = numberOfNeighbors( x, y);
-  return cells[x][y].value ? (num === 2 || num === 3) : (num === 3); 
-};
-
-var refresh = function( element, width, height ) {
-  var width = width || 30;
-  var height = height || 30;
-  var lines = [];
-  var characters;
-  for (var h = 0; h < height; h++) {
-    characters = [];
-    for (var w = 0; w < width; w++) {
-      if (cells[w] && cells[w][h] && cells[w][h].value) {
-        characters.push( "*" );
-      } else {
-        characters.push( " " );
+  Cell.prototype.numberOfNeighbors = function( grid ) {
+    var number = 0;
+    this.iterateThroughNeighbors( function( checkX, checkY ) {
+      var checkCell = grid.cellAt( checkX, checkY );
+      if (checkCell && checkCell.alive) {
+        number++;
       }
-    }
-    characters.push("\n");
-    lines.push( characters.join( "" ));
-  }
-  document.getElementById( element ).innerHTML = lines.join( "" );
-}
-  
-cells.setFates = function() { 
-  console.log("At the beginning of setFates:");
-  console.dir(cells);
-  for (var x in this) {
-    for (var y in this[x]) {
-      this[x][y].fate = fate( x, y );
-    }
-  }
-  console.log("At the end of setFates:");
-  console.dir(cells);
-}
+    });
+    return number;
+  };
 
-cells.clearDeadwood = function() {
-  console.log("Beginning of clearDeadwood: ");
-  console.dir(cells);
-  for (var x in this) {
-    for (var y in this[x]) {
-      if (numberOfNeighbors( x, y ) === 0) {
-        delete this[x][y];
-      }
-    }
-  }
-  console.log("End of clearDeadwood: ");
-  console.dir(cells);
-}
+  Cell.prototype.setFate = function( grid ) {
+    var num = this.numberOfNeighbors( grid );
+    this.willLive = this.alive ? (num === 2 || num === 3) : (num === 3);
+  };
 
-cells.step = function() {
-  this.setFates();
-  for (var x in this) {
-    for (var y in this[x]) {
-      if (this[x][y].fate === true) {
-        turnOnCell( x, y );
-      } else {
-        turnOffCell( x, y );
-      }
-    }
-  }
-  this.clearDeadwood();
-};
+  var Grid = function( plan ) {
+    this.init( plan );
+  };
 
-var importPlan = (function( planArray ) {
-  var width = planArray ? planArray[0].length : 20;
-  var height = planArray ? planArray.length : 15;
-  
-  for (var y = 0; y < height; y++) {
-    for (var x = 0; x < width; x++) {
-      if (planArray) {
-        if (planArray[y][x] === "*") {
-          turnOnCell( x, y );
+  Grid.prototype.iterate = function( action ) {
+    var x, y;
+    for (x in this) {
+      if (this.hasOwnProperty( x )) {
+        for (y in this[x]) {
+          if (this[x].hasOwnProperty( y )) {
+            action( this[x][y] );
+          }
         }
-      } else if (0.6 < Math.random()) {
-        turnOnCell( x, y );
       }
     }
+  };
+  
+  Grid.prototype.cellAt = function( x, y ) {
+    return this[x] && this[x][y];
+  };
+
+  Grid.prototype.add = function( cell ) {
+    var x = cell.x, y = cell.y;
+    this[x] = this[x] || {};
+    this[x][y] = cell;
+  };
+
+  Grid.prototype.activate = function( x, y ) {
+    var grid = this;
+    var cell = new Cell( x, y );
+
+    this.add( cell );
+    cell.comeToLife();
+    
+    // Even though they're not alive yet, all the cell's neighbors that don't
+    // already exist need to be created, so that they will be checked in 
+    // the subsequent round to see if they should come alive.
+     
+    cell.iterateThroughNeighbors( function( newX, newY ) {
+      if (!grid.cellAt( newX, newY )) {
+        grid.add( new Cell( newX, newY ));
+      }
+    });
+  };
+
+  Grid.prototype.step = function() {
+    var grid = this;
+    var column;
+
+    // Who lives and who dies
+    this.iterate( function( cell ) {
+      cell.setFate( grid );
+    });
+
+    // Execute fates
+    this.iterate( function( cell ) {
+      if (cell.willLive) {
+        cell.comeToLife();
+      } else {
+        cell.die();
+      }
+    });
+
+    // Clear deadwood for memory management
+    this.iterate( function( cell ) {
+      var x = cell.x, y = cell.y;
+      
+      if (!cell.alive && cell.numberOfNeighbors( grid ) === 0) {
+        delete grid[x][y];
+      }
+    });
+  };
+  
+  Grid.prototype.init = function( planArray ) {
+    var x, y;
+    var width = planArray ? planArray[0].length : config.PLAN_WIDTH;
+    var height = planArray ? planArray.length : config.PLAN_HEIGHT;
+    
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        
+        // If we've been passed a planArray, check whether the element is starred,
+        // Otherwise pick a random number.
+        
+        if ( (planArray && (planArray[y][x] === '*')) || ((!planArray) && (0.6 < Math.random())) ) {
+          this.activate( x, y );
+        }
+      }
+    }
+  };
+  
+  ////// --- THE DISPLAY ---------------------------
+
+  var refresh = function( grid, element, width, height ) {
+    var lines = [];
+    var characters;
+    var w, h;
+    var cell;
+    
+    for (h = 0; h < height; h++) {
+      characters = [];
+      for (w = 0; w < width; w++) {
+        cell = grid.cellAt( w, h );
+        if (cell && cell.alive) {
+          characters.push( "*" );
+        } else {
+          characters.push( " " );
+        }
+      }
+      characters.push("\n");
+      lines.push( characters.join( "" ));
+    }
+    document.getElementById( element ).innerHTML = lines.join( "" );
   }
+
+  var userSpeed = {
+  	get: function() {
+  	  return parseFloat( document.getElementById( 'speed' ).value );
+	  },
+  	set: function( val ) {
+  		document.getElementById( 'speed' ).value = val;
+  	}
+  };
+  
+  var interval;
+  
+  var runLife = function ( grid, speed ) {
+    refresh( grid, 'field', config.REFRESH_WIDTH, config.REFRESH_HEIGHT );
+
+  	interval = setInterval( function() {
+  	  grid.step();
+  	  refresh( grid, 'field', config.REFRESH_WIDTH, config.REFRESH_HEIGHT );
+  	}, Math.floor( 1000 / speed ) );
+  };
+
+  var setEventHandlers = function( grid ) {
+    
+    var changeSpeed = function() {
+      var speed = userSpeed.get();
+      clearInterval( interval );
+      userSpeed.set( speed );
+      runLife( grid, speed );
+    }
+    
+    document.getElementById( 'speedbutton' ).onclick = function() {
+      changeSpeed();
+    };
+
+    document.getElementById( 'speed' ).onkeydown = function( event ) {
+
+        // cross-browser compliance for different keydown event key code property names    
+        var code = event.keyCode || event.which;
+        if (code === 13) {
+            event.preventDefault();
+            changeSpeed();
+        }
+    };
+  };
+
+
+  // ------- MAKE IT SO ----------------
+
+  // Pass an array of strings with spaces and asterisks
+  // here to start with specific initial conditions.
+   
+  var grid = new Grid(); 
+  setEventHandlers( grid );
+  runLife( grid, userSpeed.get() );
+  
+  // ---- module interface for debugging -----
+  
+  return { grid: grid,
+           config: config,
+           interval: interval
+         };
+    
 })();
 
-
-////// --- the implementation
-
-var userSpeed = {
-	value: document.getElementById( "speed" ).value,
-	set: function() {
-		var newValue = parseFloat( document.getElementById( "speed" ).value );
-		this.value = newValue || this.value;
-		document.getElementById( "speed" ).value = this.value;
-	}
-};
-
-document.getElementById( "speedbutton" ).onclick = function() {
-	userSpeed.set.call( userSpeed );
-};
-
-document.getElementById( 'speed' ).onkeydown = function( event ) {
-
-    // cross-browser compliance for different keydown event key code property names    
-    var code = event.keyCode || event.which;
-    if (code === 13) {
-        event.preventDefault();
-        userSpeed.set.call( userSpeed );
-    }
-};
-
-/*
-for (var counter = 0; counter < 3; counter++) {
-  refresh( "field", 30, 30 );
-  cells.step();
-  
-}
-*/
-
-
-(function runLife( speed ) {
-	var interval = setInterval( function() {
-		
-		if (speed !== userSpeed.value) {
-			clearInterval( interval );
-			runLife( userSpeed.value );
-		}
-	  refresh( "field", 100, 100 );
-	  cells.step();
-		
-	}, Math.floor( 1000 / userSpeed.value ) );
-})( userSpeed.value );
-
-
-
-/////////////////////////////// tests
-
-var assert = function( test, message ) {
-  console.log( (test ? "PASSED: " : "FAILED: ") + message );
-};
-
-var deadOrUnborn = function( value ) {
-  if (typeof value === "undefined" || value === false) return false;
-}
-
-assert( numberOfNeighbors(1,1) === 6, "1,1 should have 6 neighbors." );
-assert( fate(4,1) === true, "4,1 will remain alive");
-assert( fate(3,2) === true, "3,2 will come alive");
-assert( !fate(1,2), "1,2 will die");
-assert( !fate(1,0), "1,0 will remain dead");
-assert( numberOfNeighbors("1","1") === 6, "Should also take strings.")
 
 </script></body></html>
