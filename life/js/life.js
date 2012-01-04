@@ -8,8 +8,8 @@ var LIFE = LIFE || (function() {
   // ------ THE CONFIG INFO -------------
   
   var config = {
-    PLAN_WIDTH: 30,
-    PLAN_HEIGHT: 10,
+    PLAN_WIDTH: 35,
+    PLAN_HEIGHT: 15,
     CELL_SIZE: 10,
     
     // PREFAB_PLAN is not currently used (we're just setting up
