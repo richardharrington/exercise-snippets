@@ -10,7 +10,10 @@ var LIFE = LIFE || (function() {
   var config = {
     PLAN_WIDTH: 30,
     PLAN_HEIGHT: 15,
+    GRID_WIDTH: 80,
+    GRID_HEIGHT: 50,
     CELL_SIZE: 10,
+    SPEED: 4,
     GRID_COLOR: '#999',
     DEAD_COLOR: '#FFF',
     LIVE_COLOR: '#000',
@@ -175,7 +178,7 @@ var LIFE = LIFE || (function() {
 
   };
   
-  Grid.prototype.init = function( planArray, fieldWidth, fieldHeight ) {
+  Grid.prototype.init = function( fieldWidth, fieldHeight, planWidth, planHeight, planArray ) {
     var x, y;
     var cell;
     var left, top;
@@ -300,22 +303,33 @@ var LIFE = LIFE || (function() {
   
   init = function() {
     
+    // We're checking to see if userSpeed is already there --
+    // even though it's not in the initial html -- because Firefox
+    // preserves its value through refreshes, which we like.
+     
+    if (!userSpeed.get()) {
+      userSpeed.set( config.SPEED );
+    }
+    
     var canvasElement = document.getElementById( 'canvasGrid' );
-    var gridWidth = Math.floor( canvasElement.width / config.CELL_SIZE );
-    var gridHeight = Math.floor( canvasElement.height / config.CELL_SIZE );
+    canvasElement.width = config.GRID_WIDTH * config.CELL_SIZE + 1;
+    canvasElement.height = config.GRID_HEIGHT * config.CELL_SIZE + 1;
 
-    // To start with specific initial conditions,
-    // pass an array of strings with spaces and asterisks
-    // as the first argument of the Grid constructor.
+    // To start with specific initial conditions, pass a fifth argument to Grid:
+    // an array of strings with spaces and asterisks
 
-    grid = new Grid( null, gridWidth, gridHeight );     
-    canvas.init( canvasElement, 
-                 gridWidth, 
-                 gridHeight, 
-                 config.CELL_SIZE,
-                 config.GRID_COLOR, 
-                 config.DEAD_COLOR, 
-                 config.LIVE_COLOR );
+    grid = new Grid( config.GRID_WIDTH, 
+                     config.GRID_HEIGHT,
+                     config.PLAN_WIDTH,
+                     config.PLAN_HEIGHT );   
+                       
+    canvas.init(     canvasElement, 
+                     config.GRID_WIDTH, 
+                     config.GRID_HEIGHT, 
+                     config.CELL_SIZE,
+                     config.GRID_COLOR, 
+                     config.DEAD_COLOR, 
+                     config.LIVE_COLOR );
 
     setEventHandlers( grid );
     runLife( grid, userSpeed.get() );
