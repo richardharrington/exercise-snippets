@@ -46,11 +46,10 @@ var LIFE = LIFE || (function() {
   Cell = function( x, y ) {
     this.x = x;
     this.y = y;
-    this.alive = false;
-  };
-  
-  Cell.prototype.alive = function() {
-    return this.alive;
+    
+    // No need to initialize this.alive = false;
+    // It will be undefined and therefore falsy 
+    // whenever we need to check it.
   };
   
   Cell.prototype.comeToLife = function() {
@@ -89,6 +88,7 @@ var LIFE = LIFE || (function() {
   };
 
   Cell.prototype.activateNeighbors = function( grid ) {
+    
     // Even though they're not alive yet, all the cell's neighbors that don't
     // already exist need to be created, so that they will be checked in 
     // the subsequent round to see if they should come alive.
@@ -104,7 +104,7 @@ var LIFE = LIFE || (function() {
     var num = this.numberOfNeighbors( grid );
     this.willLive = this.alive ? (num === 2 || num === 3) : (num === 3);
   };
-
+  
 
   Grid = function( plan, width, height ) {
     this.init( plan, width, height );
@@ -135,19 +135,19 @@ var LIFE = LIFE || (function() {
   };
 
   Grid.prototype.step = function() {
-    var grid = this;
+    var self = this;
     var column;
 
     // Who lives and who dies
     this.iterate( function( cell ) {
-      cell.setFate( grid );
+      cell.setFate( self );
     });
 
     // Execute fates
     this.iterate( function( cell ) {
       if (cell.willLive) {
         cell.comeToLife();
-        cell.activateNeighbors( grid );
+        cell.activateNeighbors( self );
       } else {
         cell.die();
       }
@@ -156,14 +156,14 @@ var LIFE = LIFE || (function() {
     // Clear deadwood for memory management and program efficiency.
     this.iterate( function( cell ) {
       var x = cell.x, y = cell.y;
-      if (!cell.alive && cell.numberOfNeighbors( grid ) === 0) {
-        delete grid[x][y];
+      if (!cell.alive && cell.numberOfNeighbors( self ) === 0) {
+        delete self[x][y];
       }
     });
     
-    for (column in grid) {
-      if (isEmpty( grid[column] )) {
-        delete grid[column];
+    for (column in this) {
+      if (isEmpty( this[column] )) {
+        delete this[column];
       }
     }
   };
@@ -285,11 +285,12 @@ var LIFE = LIFE || (function() {
   
   init = function() {
     var canvasElement = document.getElementById( 'canvasGrid' );
-    var width = (canvasElement.width - 1) / config.CELL_SIZE;
-    var height = (canvasElement.height - 1) / config.CELL_SIZE;
+    var width = Math.floor( canvasElement.width / config.CELL_SIZE );
+    var height = Math.floor( canvasElement.height / config.CELL_SIZE );
 
-    // Pass an array of strings with spaces and asterisks
-    // here where it says "null" to start with specific initial conditions.
+    // To start with specific initial conditions,
+    // pass an array of strings with spaces and asterisks
+    // as the first argument of the Grid constructor.
 
     grid = new Grid( null, width, height ); 
     canvas.init( canvasElement, width, height);
