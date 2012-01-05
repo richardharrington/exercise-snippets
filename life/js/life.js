@@ -30,7 +30,7 @@ var LIFE = LIFE || (function() {
       grid, canvas, userSpeed, interval,
       setEventHandlers, runLife, init;
   
-  // ------- UTILITY FUNCTION (actually, there's only one) -----
+  // ------- UTILITY FUNCTIONS (actually, there's only one) -----
   
   isEmpty = function( obj ) {
     for (var p in obj) {
