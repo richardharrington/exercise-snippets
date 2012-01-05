@@ -11,6 +11,9 @@ var LIFE = LIFE || (function() {
     PLAN_WIDTH: 35,
     PLAN_HEIGHT: 15,
     CELL_SIZE: 10,
+    GRID_COLOR: '#999',
+    DEAD_COLOR: '#FFF',
+    LIVE_COLOR: '#000',
     
     // PREFAB_PLAN is not currently used (we're just setting up
     // a random plan instead). This is just an example. To put it into
@@ -199,44 +202,48 @@ var LIFE = LIFE || (function() {
   
   canvas = {
     
-    init: function( element, cellsWide, cellsHigh ) {
-      this.c = element.getContext( "2d" );
+    init: function( element, cellsWide, cellsHigh, gridColor, deadColor, liveColor ) {
+      var x, y;
+      var c = element.getContext( "2d" );
       
-      this.c.fillStyle = '#999';
-      this.c.fillRect( 0, 0, element.width, element.height );
-            
+      this.c = c;
       this.cellsWide = cellsWide;
       this.cellsHigh = cellsHigh;
+      this.gridColor = gridColor;
+      this.deadColor = deadColor;
+      this.liveColor = liveColor;
+      
+      // Create gridColor grid
+      c.fillStyle = gridColor;
+      c.fillRect( 0, 0, element.width, element.height );
+
+      // Make cells deadColor
+      for (x = 0; x < cellsWide; x++) {
+        for (y = 0; y < cellsHigh; y++) {
+          this.fillCell( x, y, deadColor );
+        }
+      }
+            
     },
     
     fillCell: function( x, y, color ) {
-      var cellSize = config.CELL_SIZE;
-      var startX, startY;
-      
-      if (x >= 0 && y >= 0 && x < this.cellsWide && y < this.cellsHigh) {
-        startX = x * cellSize;
-        startY = y * cellSize;
-
-        this.c.fillStyle = color;
-        this.c.fillRect( startX + 1, startY + 1, cellSize - 1, cellSize - 1 );
-      }
+      var c = this.c;
+      c.fillStyle = color;
+      c.fillRect( x*cellSize + 1, y*cellSize + 1, cellSize - 1, cellSize - 1 );
     },
     
     refresh: function( grid ) {
-      var x, y;
-      var cell;
+      var self = this;
+      var fillCell = this.fillCell;
+      var deadColor = this.deadColor, 
+          liveColor = this.liveColor;
       
-      for (x = 0; x < this.cellsWide; x++) {
-        for (y = 0; y < this.cellsHigh; y++) {
-          
-          // Check for existence of grid because
-          // we're also using this method to fill canvas with white squares
-          // before we create the grid.
-          
-          cell = grid.cellAt( x, y );
-          this.fillCell( x, y, (cell && cell.alive) ? '#000' : '#FFF' );
+      grid.iterate( function( cell) {
+        var x = cell.x, y = cell.y;
+        if (x >= 0 && y >= 0 && x < self.cellsWide && y < self.cellsHigh) {
+          fillCell( x, y, (cell.alive ? liveColor : deadColor) );
         }
-      }
+      });
     }
   };
   
@@ -284,16 +291,17 @@ var LIFE = LIFE || (function() {
   };
   
   init = function() {
+    
     var canvasElement = document.getElementById( 'canvasGrid' );
-    var width = Math.floor( canvasElement.width / config.CELL_SIZE );
-    var height = Math.floor( canvasElement.height / config.CELL_SIZE );
+    var gridWidth = Math.floor( canvasElement.width / config.CELL_SIZE );
+    var gridHeight = Math.floor( canvasElement.height / config.CELL_SIZE );
 
     // To start with specific initial conditions,
     // pass an array of strings with spaces and asterisks
     // as the first argument of the Grid constructor.
 
-    grid = new Grid( null, width, height ); 
-    canvas.init( canvasElement, width, height);
+    grid = new Grid( null, gridWidth, gridHeight );     
+    canvas.init( canvasElement, gridWidth, gridHeight, config.GRID_COLOR, config.DEAD_COLOR, config.LIVE_COLOR);
 
     setEventHandlers( grid );
     runLife( grid, userSpeed.get() );
