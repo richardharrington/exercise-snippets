@@ -8,7 +8,7 @@ var LIFE = LIFE || (function() {
   // ------ THE CONFIG INFO -------------
   
   var config = {
-    PLAN_WIDTH: 35,
+    PLAN_WIDTH: 30,
     PLAN_HEIGHT: 15,
     CELL_SIZE: 10,
     GRID_COLOR: '#999',
@@ -137,6 +137,23 @@ var LIFE = LIFE || (function() {
     this[x][y] = cell;
   };
 
+  Grid.prototype.clearDeadwood = function() {
+    var self = this;
+
+    this.iterate( function( cell ) {
+      var x = cell.x, y = cell.y;
+      if (!cell.alive && cell.numberOfNeighbors( self ) === 0) {
+        delete self[x][y];
+      }
+    });
+    
+    for (column in this) {
+      if (isEmpty( this[column] )) {
+        delete this[column];
+      }
+    }
+  };
+  
   Grid.prototype.step = function() {
     var self = this;
     var column;
@@ -156,19 +173,6 @@ var LIFE = LIFE || (function() {
       }
     });
 
-    // Clear deadwood for memory management and program efficiency.
-    this.iterate( function( cell ) {
-      var x = cell.x, y = cell.y;
-      if (!cell.alive && cell.numberOfNeighbors( self ) === 0) {
-        delete self[x][y];
-      }
-    });
-    
-    for (column in this) {
-      if (isEmpty( this[column] )) {
-        delete this[column];
-      }
-    }
   };
   
   Grid.prototype.init = function( planArray, fieldWidth, fieldHeight ) {
@@ -202,13 +206,14 @@ var LIFE = LIFE || (function() {
   
   canvas = {
     
-    init: function( element, cellsWide, cellsHigh, gridColor, deadColor, liveColor ) {
+    init: function( element, cellsWide, cellsHigh, cellSize, gridColor, deadColor, liveColor ) {
       var x, y;
       var c = element.getContext( "2d" );
       
       this.c = c;
       this.cellsWide = cellsWide;
       this.cellsHigh = cellsHigh;
+      this.cellSize = cellSize;
       this.gridColor = gridColor;
       this.deadColor = deadColor;
       this.liveColor = liveColor;
@@ -228,20 +233,22 @@ var LIFE = LIFE || (function() {
     
     fillCell: function( x, y, color ) {
       var c = this.c;
+      var cellSize = this.cellSize;
       c.fillStyle = color;
       c.fillRect( x*cellSize + 1, y*cellSize + 1, cellSize - 1, cellSize - 1 );
     },
     
     refresh: function( grid ) {
       var self = this;
-      var fillCell = this.fillCell;
+      var cellsWide = this.cellsWide,
+          cellsHigh = this.cellsHigh;
       var deadColor = this.deadColor, 
           liveColor = this.liveColor;
       
       grid.iterate( function( cell) {
         var x = cell.x, y = cell.y;
-        if (x >= 0 && y >= 0 && x < self.cellsWide && y < self.cellsHigh) {
-          fillCell( x, y, (cell.alive ? liveColor : deadColor) );
+        if (x >= 0 && y >= 0 && x < cellsWide && y < cellsHigh) {
+          self.fillCell( x, y, (cell.alive ? liveColor : deadColor) );
         }
       });
     }
@@ -260,6 +267,7 @@ var LIFE = LIFE || (function() {
     canvas.refresh( grid );
 
     interval = setInterval( function() {
+      grid.clearDeadwood();
       grid.step();
       canvas.refresh( grid );
     }, Math.floor( 1000 / speed ) );
@@ -301,7 +309,13 @@ var LIFE = LIFE || (function() {
     // as the first argument of the Grid constructor.
 
     grid = new Grid( null, gridWidth, gridHeight );     
-    canvas.init( canvasElement, gridWidth, gridHeight, config.GRID_COLOR, config.DEAD_COLOR, config.LIVE_COLOR);
+    canvas.init( canvasElement, 
+                 gridWidth, 
+                 gridHeight, 
+                 config.CELL_SIZE,
+                 config.GRID_COLOR, 
+                 config.DEAD_COLOR, 
+                 config.LIVE_COLOR );
 
     setEventHandlers( grid );
     runLife( grid, userSpeed.get() );
