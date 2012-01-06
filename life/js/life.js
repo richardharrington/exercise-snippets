@@ -134,7 +134,6 @@ var LIFE = LIFE || (function() {
   };
 
   Grid.prototype.add = function( cell ) {
-    var column;
     var x = cell.x, y = cell.y;
     this[x] = this[x] || {};
     this[x][y] = cell;
@@ -142,6 +141,7 @@ var LIFE = LIFE || (function() {
 
   Grid.prototype.clearDeadwood = function() {
     var self = this;
+    var column;
 
     this.iterate( function( cell ) {
       var x = cell.x, y = cell.y;
@@ -159,7 +159,6 @@ var LIFE = LIFE || (function() {
   
   Grid.prototype.step = function() {
     var self = this;
-    var column;
 
     // Who lives and who dies
     this.iterate( function( cell ) {
