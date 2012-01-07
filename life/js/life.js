@@ -11,13 +11,14 @@ var LIFE = LIFE || (function() {
   var config = {
     PLAN_WIDTH: 30,
     PLAN_HEIGHT: 15,
-    GRID_WIDTH: 80,
+    GRID_WIDTH: 90,
     GRID_HEIGHT: 50,
     CELL_SIZE: 10,
     SPEED: 4,
-    GRID_COLOR: '#999',
-    DEAD_COLOR: '#FFF',
-    LIVE_COLOR: '#000',
+    GRID_COLOR: '#CFC',
+    DEAD_COLOR: '#CFC',
+    LIVE_COLOR: '#085',
+    
     
     // PREFAB_PLAN is not currently used (we're just setting up
     // a random plan instead). This is just an example. To put it into
