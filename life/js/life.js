@@ -1,6 +1,7 @@
 // The "grid" in this program is not exactly a 2D array,
-// it's more of a 2D hash table. Only cells that are alive,
-// and their immediate neighbors, are represented in the grid.
+// it's a sparse matrix in the form of a 2D hash table. 
+// Only cells that are alive, and their immediate neighbors, 
+// are represented in the grid.
 
 ;
 var LIFE = LIFE || (function() {
