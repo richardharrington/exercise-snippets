@@ -15,7 +15,7 @@ var LIFE = LIFE || (function() {
     GRID_HEIGHT: 50,
     CELL_SIZE: 10,
     SPEED: 4,
-    GRID_COLOR: '#CFC',
+    GRID_COLOR: '#BEB',
     DEAD_COLOR: '#CFC',
     LIVE_COLOR: '#085',
     
