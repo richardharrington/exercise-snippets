@@ -6,4 +6,4 @@ A little while ago I went to an all-day Meetup to learn a bit of Coffeescript. W
 
 As time goes on I will add more user-interface features, like a way for the user to set more initial conditions, and a start/stop toggle button and a reset button.
 
-Perhaps even a way to set each square on the grid before it begins running, but clicking the mouse to make each square black. Yeah, now we're talking.
+Perhaps even a way to set each square on the grid before it begins running, by clicking the mouse to make each square black. Yeah, now we're talking.
