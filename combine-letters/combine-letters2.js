@@ -28,7 +28,7 @@ combineLetters = function( letterArray, allSizeWords ) {
         var c, i, len, rest;
         var resultWord;
         
-        if (array.length == 1) {
+        if (array.length === 1) {
             resultWord = partialWord + array[0];
             result.add( resultWord );
         } else {

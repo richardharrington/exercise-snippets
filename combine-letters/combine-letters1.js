@@ -7,7 +7,7 @@ var combineLetters = function( letterArray ) {
     (function buildWords( word, array ) {
         var c, i, len, rest;
         
-        if (array.length == 1) {
+        if (array.length === 1) {
             word += array[0];
             if (!cache[ word ]) {
                 result.push( word );
