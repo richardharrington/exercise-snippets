@@ -4,34 +4,13 @@
 // are represented in the grid.
 
 ;
-var LIFE = LIFE || (function() {
-  
-  // ------ THE CONFIG INFO -------------
-  
-  var config = {
-    PLAN_WIDTH: 30,
-    PLAN_HEIGHT: 15,
-    GRID_WIDTH: 90,
-    GRID_HEIGHT: 50,
-    CELL_SIZE: 10,
-    SPEED: 4,
-    GRID_COLOR: '#BEB',
-    DEAD_COLOR: '#CFC',
-    LIVE_COLOR: '#085',
-    
-    
-    // PREFAB_PLAN is not currently used (we're just setting up
-    // a random plan instead). This is just an example. To put it into
-    // use, pass it to the grid.init method below.
 
-    PREFAB_PLAN: [
-      " * ",
-      "  *",
-      "***"
-    ]
-  };
-  
-  // The other variables
+var LIFE = (typeof LIFE !== 'undefined') ? LIFE : {};
+LIFE.main = (typeof LIFE.main !== 'undefined') ? LIFE.main : 
+
+(function() {
+    
+  var config = LIFE.config;
   
   var isEmpty,
       Grid, Cell,
@@ -347,7 +326,6 @@ var LIFE = LIFE || (function() {
   return { 
     grid: grid,
     canvas: canvas,
-    config: config,
     interval: interval
   };
     
