@@ -1,20 +1,24 @@
 class Triangle
   
-  def read_file
-    arr_num = File.open('triangle.txt','r') do |f|
-      f.each_line.collect do |line|
-        line.split(' ').collect{ |x| x.to_i}
+  def initialize (file)
+    @file = file
+  end
+  
+  def get_array
+    File.open(@file, 'r') do |f|
+      f.each_line.map do |row|
+        row.split(' ').map { |x| x.to_i }
       end
     end
   end
 
-  def cal
-    result = read_file.reverse
-    result.each_with_index do |line, l_index|
-      line.each_with_index do |element, e_index|
-        if l_index > 0
-          previous_line = result[l_index - 1]
-          line[e_index] += previous_line[e_index] > previous_line[e_index + 1] ? previous_line[e_index] : previous_line[e_index + 1]
+  def calculate
+    result = get_array.reverse
+    result.each_with_index do |row, i|
+      row.each_with_index do |num, j|
+        if i > 0
+          previous_row = result[i - 1]
+          row[j] += [previous_row[j], previous_row[j + 1]].max
         end
       end
     end
@@ -22,4 +26,4 @@ class Triangle
   end
 end
 
-puts Triangle.new.cal
+puts Triangle.new('triangle.txt').calculate

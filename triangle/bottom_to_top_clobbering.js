@@ -7,13 +7,14 @@ var max = function (file) {
     return row.trim().split(' ').map(function(word) {
       return parseInt(word);
     });
-  }).reverse();
+  });
   
+  array.reverse();
   array.forEach(function(row, i) {
     row.forEach(function(num, j) {
       if (i > 0) {
-        var previousRow = array[i-1];
-        row[j] += previousRow[j] > previousRow[j+1] ? previousRow[j] : previousRow[j+1];
+        var previousRow = array[i - 1];
+        row[j] += Math.max(previousRow[j], previousRow[j + 1]);
       }
     });
   });

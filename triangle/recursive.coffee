@@ -20,4 +20,4 @@ max = (file) ->
     return node.memo_sum if node.memo_sum?
     node.memo_sum = node.num + Math.max (walk_tree node.left), (walk_tree node.right)
 
-console.log max('triangle.txt')
+console.log max 'triangle.txt'

@@ -2,7 +2,8 @@ var fs = require('fs');
 
 var max = function (file) {
   
-  var array = fs.readFileSync(file, 'ascii').split('\n').map(function(row) {
+  var text = fs.readFileSync(file, 'ascii');
+  var array = text.split('\n').map(function(row) {
     return row.trim().split(' ').map(function(word) {
       return parseInt(word);
     });

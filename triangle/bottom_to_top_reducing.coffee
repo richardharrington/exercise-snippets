@@ -2,7 +2,8 @@ fs = require 'fs'
 
 max = (file) ->
   
-  array = fs.readFileSync(file, 'ascii').split('\n').map (row) ->
+  text = fs.readFileSync(file, 'ascii')
+  array = text.split('\n').map (row) ->
     row.trim().split(' ').map (word) ->
       parseInt word
       

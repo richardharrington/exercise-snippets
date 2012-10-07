@@ -32,9 +32,9 @@ class Triangle
     node[:memo_sum] = node[:num] + [walk_tree(node[:left]), walk_tree(node[:right])].max
   end
   
-  def get_max
+  def calculate
     walk_tree( get_root( get_array( @file)))
   end
 end
 
-puts Triangle.new('triangle.txt').get_max
+puts Triangle.new('triangle.txt').calculate

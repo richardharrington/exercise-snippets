@@ -2,17 +2,16 @@ fs = require 'fs'
 
 max = (file) ->
   
-  text = fs.readFileSync('triangle.txt', 'ascii')
+  text = fs.readFileSync(file, 'ascii')
   array = text.split('\n').map (row) ->
     row.trim().split(' ').map (word) ->
       parseInt word
   
-  array.reverse().forEach (row, i) ->
+  array.reverse().forEach (row, i, arr) ->
     row.forEach (num, j) ->
-      next_row = array[i + 1]
-      next_num = row[j + 1]
-      if next_row? and next_num?
-        next_row[j] += if num > next_num then num else next_num
+      if i > 0
+        previous_row = arr[i - 1]
+        row[j] += Math.max previous_row[j], previous_row[j + 1]
         
   array[array.length - 1][0]
 
